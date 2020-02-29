@@ -1,4 +1,4 @@
-#Cache 模块
+## Cache 模块
 
 #### 1. Storage.swift
 
@@ -113,7 +113,7 @@ public enum ImageCacheResult {
 背后会移除过期的缓存，以及超出缓存限制的硬盘缓存。这里会先获取所有硬盘缓存对象的URL，compactMap为FileMeta对象，并且根据最后获取日期排序。然后遍历这些对象，对每个fileSize相加，后续对超出sizeLimit的Filemeta对象进行移除操作。
 
 
-# Networking
+## Networking
 
 #### 1.ImageDownloader.swift
 这是主要的核心文件！
@@ -169,7 +169,7 @@ struct TaskCallback {
 
 ```
 
-# Kingfisher
+## Kingfisher
 1. Kingfisher
 内部的KingfisherCompatibleValue和KingfisherCompatible起的是一个namespace的作用。例如给String拓展一个方法，如果extension string的话，所有的String都可以string.method，但是通过如下方法，只能string.kf.method调用
 ```
@@ -183,11 +183,11 @@ extension KingfisherWrapper where Base == String {
 
 
 
-# 重要文件
+## 重要文件
 
 我看来比较有意思的几个文件，Delegate，Kingfisher， Downloader，SessionDelegate，KingfisherOptionsInfo。
 
-# 总结
+## 总结
 当Kingfisher从本地或者server加载图片的时候，首先会将源封装为Resource或者Provider。如果是server的图片，首先会判断是否在MemoryCache中，如果在并且没有过期，则直接返回，并且更新过期时间。如果没有在MemoryCache中，则判断是否在DiskCache中，如果有并且没有过期，则返回同时塞到MemoryCache中。如果缓存中都没有，则会生成Request，并且根据options里的modifier，决定是否modifier request。将complete closure封装为Delegate对象， 弱持有Downloader。将options和completion delegate。封装为SessionDataTask.TaskCallBack对象callback，sessionDelegate根据url判断是否已经有DownloadTask,如果有，则直接将callback添加到downloadTask的callbackStore中。如果没有DownloadTask，则由session根据request生成URLSessionDataTask，再由sessionDelegate根据URLSessionDataTask，和callback生成DownloadTask，sessionDelegate持有DownloadTask，以url为key。然后downloadTask.resume 开启下载。
 URLSessionDelegate的回调在SessionDelegate中，在回调方法里，会根据url获取到对应的downloadTask。downloadTask持有options，可以进行progress，redirectHandler回调。网络下载图片成功后，会利用processor根据options对图片进行处理缩小，反转等处理。处理完毕会在KingfisherManager层收到回调，对图片进行缓存之后，返回给业务层。
 
