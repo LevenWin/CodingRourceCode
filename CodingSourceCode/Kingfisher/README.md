@@ -1,49 +1,48 @@
 ## Cache 模块
 
 #### 1. Storage.swift
-
-	`TimeConstants` `struct` 定义了秒分时天
+`TimeConstants` `struct` 定义了秒分时天
 	`StorageExpiration` `enum`类型，用来定义缓存过期时间，
 	`ExpirationExtending` `enum`类型，用来定义对缓存元素的延期。一般获取到缓存元素后，会对该元素的过期时间进行延期
 	`CacheCostCalcuable` `Protocol` 类型。又来定义元素所占的缓存大小
-	`DataTransformable` `Protocol`,用来定义对象转为Data，以及Data转为对象的接口定义。
-	
-	
+	`DataTransformable` `Protocol`,用来定义
+	对象转为Data，以及Data转为对象的接口定义。
+
+
 #### 2. MemoryStorage.swift
-	`MemoryStorage`定义为`enum`类型的原因是因为`This is a namespace for the memory storage types`,内部有`Backend<T: CacheCostCalcuable>`类型。内部缓存对象使用`NSCache`
-	```
-	let storage = NSCache<NSString, StorageObject<T>>()
-	```
-	缓存的配置信息由定义在`MemoryStorage` extension里定义的内部struct `Config`定义
-	```
-	extension MemoryStorage {
+`MemoryStorage`定义为`enum`类型的原因是因为`This is a namespace for the memory storage types`,内部有`Backend<T:CacheCostCalcuable>`类型。内部缓存对象使用`NSCache`
+```
+let storage = NSCache<NSString, StorageObject<T>>()
+```
+缓存的配置信息由定义在`MemoryStorage` extension里定义的内部struct `Config`定义
+```
+extension MemoryStorage {
 		var totalCostLimit: Int
 		var countLimit: Int = .max
 		var expiration: StorageExpiration = .second(300)
 		var cleanInterval: TimeIOnterval = 120;
 	}
-	```
-	内存缓存默认300秒后过期，默认120秒清理一次过期缓存。
-	真正缓存在Cache的元素是有StorageObject包裹。由于NSCache无法知道具体缓存的keys.因此Backend内会有
-	`var keys = Set<String>()` 来记录缓存的Keys
-	缓存的的接口：
-	```
-	func store(value: T, forKey key: String, expiration: StorageExpiration? = nil) throws
-	```
+```
+内存缓存默认300秒后过期，默认120秒清理一次过期缓存。真正缓存在Cache的元素是有StorageObject包裹。由于NSCache无法知道具体缓存的keys.因此Backend内会有`var keys = Set<String>()` 来记录缓存的Keys
+缓存的的接口：
+```
+func store(value: T, forKey key: String, expiration: StorageExpiration? = nil) throws
+```
 	首先会通过NSLock加锁如果expiration.isExpired 为true，会直接放弃缓存。将value封装为`StorageObject`,然后缓存
-	```
+```
 	storage.setObject(object, forKey: key as NSString, cost: value.cacheCost)
 	keys.insert(key)
-	```
-	获取的接口：
-	```
+```
+获取的接口：
+```
 	  func value(forKey key: String, extendingExpiration: ExpirationExtending = .cacheTime) -> T?
-	 ```
+```
 	 
-	 通过`objectForKey`获取到元素。如果`expired` 会返回nil。如果没有过期。则会延长过期时间。
-	 ```
+通过`objectForKey`获取到元素。如果`expired` 会返回nil。如果没有过期。则会延长过期时间。
+```
 	 object.extendExpiration(extendingExpiration)
-	 ```
+```
+
 #### 3. DiskStorage.swift
 和`MemoryStorage.swift`类似。不同的是缓存的对象必须遵循 `DataTransformable`协议
 ```
